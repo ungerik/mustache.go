@@ -219,7 +219,7 @@ func (tmpl *Template) parseSection(section *sectionElement) os.Error {
                 return parseError{tmpl.curline, "Invalid meta tag"}
             }
             tag = strings.TrimSpace(tag[1 : len(tag)-1])
-            newtags := strings.Split(tag, " ", 2)
+            newtags := strings.SplitN(tag, " ", 2)
             if len(newtags) == 2 {
                 tmpl.otag = newtags[0]
                 tmpl.ctag = newtags[1]
@@ -300,7 +300,7 @@ func (tmpl *Template) parse() os.Error {
                 return parseError{tmpl.curline, "Invalid meta tag"}
             }
             tag = strings.TrimSpace(tag[1 : len(tag)-1])
-            newtags := strings.Split(tag, " ", 2)
+            newtags := strings.SplitN(tag, " ", 2)
             if len(newtags) == 2 {
                 tmpl.otag = newtags[0]
                 tmpl.ctag = newtags[1]
@@ -369,7 +369,13 @@ func call(v reflect.Value, method reflect.Method) reflect.Value {
 
 // Evaluate interfaces and pointers looking for a value that can look up the name, via a
 // struct field, method, or map key, and return the result of the lookup.
-func lookup(contextChain *vector.Vector, name string) reflect.Value {
+func lookup(contextChain *vector.Vector, name string) (reflect.Value) {
+    defer func() {
+        if r := recover(); r != nil {
+            fmt.Printf("Panic while looking up %s - %s", name, r)
+        }
+    }()
+    
 Outer:
     for i := contextChain.Len() - 1; i >= 0; i-- {
         v := contextChain.At(i).(reflect.Value)
